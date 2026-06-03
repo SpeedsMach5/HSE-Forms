@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Employee Involvement Assessment</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f10; --surface: #161a1c; --border: #2a2f32;
+    --border-active: #E8A020; --amber: #E8A020; --amber-dim: #c07a10;
+    --text: #e4e6e8; --text-muted: #7a8085; --text-label: #a0a8af;
+    --input-bg: #1c2124; --radius: 6px;
+  }
+  html { background: var(--bg); }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 0 0 60px 0; }
+  .header { background: var(--surface); border-bottom: 2px solid var(--amber); padding: 20px 20px 16px; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .header-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: var(--bg); background: var(--amber); padding: 3px 7px; border-radius: 3px; letter-spacing: 0.08em; white-space: nowrap; }
+  .header h1 { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.2; }
+  .header-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .progress-bar-wrap { margin-top: 10px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--amber); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+  .progress-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-muted); margin-top: 5px; text-align: right; }
+  .anon-notice { margin: 14px 16px 0; background: rgba(232,160,32,0.07); border: 1px solid rgba(232,160,32,0.25); border-radius: var(--radius); padding: 10px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--amber); line-height: 1.5; }
+  .anon-notice strong { font-weight: 600; }
+  .meta-section { padding: 20px 16px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .meta-field { display: flex; flex-direction: column; gap: 5px; }
+  .meta-field.full { grid-column: 1 / -1; }
+  .meta-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--amber); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+  .meta-input { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; padding: 9px 11px; border-radius: var(--radius); outline: none; transition: border-color 0.15s; width: 100%; }
+  .meta-input:focus { border-color: var(--amber); }
+  .section-divider { margin: 20px 16px 0; border: none; border-top: 1px solid var(--border); }
+  .questions { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+  .q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.15s; }
+  .q-card:focus-within { border-color: var(--border-active); }
+  .q-num { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; color: var(--amber); background: rgba(232,160,32,0.08); padding: 6px 12px 5px; border-bottom: 1px solid var(--border); letter-spacing: 0.1em; display: flex; justify-content: space-between; align-items: center; }
+  .q-answered-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+  .q-answered-dot.filled { background: var(--amber); }
+  .q-text { font-size: 13px; font-weight: 500; color: var(--text-label); padding: 10px 12px 8px; line-height: 1.5; }
+  .q-textarea { background: transparent; border: none; border-top: 1px solid var(--border); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; line-height: 1.6; padding: 10px 12px; width: 100%; resize: vertical; min-height: 90px; outline: none; }
+  .q-textarea::placeholder { color: var(--text-muted); font-size: 13px; }
+  .submit-wrap { padding: 20px 16px 0; }
+  .submit-btn { width: 100%; background: var(--amber); color: #0d0f10; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; border: none; padding: 16px; border-radius: var(--radius); cursor: pointer; transition: background 0.15s, transform 0.1s; text-transform: uppercase; -webkit-tap-highlight-color: transparent; }
+  .submit-btn:active { background: var(--amber-dim); transform: scale(0.98); }
+  .submit-btn:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
+  .submit-note { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 8px; line-height: 1.5; }
+  .complete-banner { display: none; margin: 16px 16px 0; background: rgba(232,160,32,0.1); border: 1px solid var(--amber); border-radius: var(--radius); padding: 12px 14px; font-size: 12px; color: var(--amber); font-family: 'IBM Plex Mono', monospace; text-align: center; line-height: 1.5; }
+  .complete-banner.show { display: block; }
+  .success-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; }
+  .success-screen.show { display: flex; }
+  .success-icon { font-size: 48px; margin-bottom: 20px; }
+  .success-title { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; color: var(--amber); margin-bottom: 10px; }
+  .success-msg { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 280px; }
+  .success-btn { margin-top: 32px; background: var(--amber); color: #0d0f10; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; border: none; padding: 14px 28px; border-radius: var(--radius); cursor: pointer; text-transform: uppercase; }
+  .error-msg { display: none; margin: 12px 16px 0; background: rgba(220,60,60,0.1); border: 1px solid rgba(220,60,60,0.4); border-radius: var(--radius); padding: 10px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #e07070; line-height: 1.5; }
+  .error-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Submitted</div>
+  <div class="success-msg">Responses received. The form has been cleared and is ready for the next interview.</div>
+  <button class="success-btn" onclick="resetForm()">New Interview</button>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <span class="header-badge">HSE</span>
+    <h1>Employee Involvement Assessment</h1>
+  </div>
+  <div class="header-meta" id="dateDisplay"></div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">0 of 14 answered</div>
+</div>
+
+<div class="anon-notice">
+  <strong>ANONYMOUS</strong> — No names are collected. Responses are attributed to trade and crew only.
+</div>
+
+<div class="meta-section">
+  <div class="meta-field">
+    <span class="meta-label">Trade / Craft</span>
+    <input class="meta-input" id="trade" type="text" placeholder="e.g. Ironworker, Electrician" autocomplete="off">
+  </div>
+  <div class="meta-field">
+    <span class="meta-label">Crew / Employer</span>
+    <input class="meta-input" id="crew" type="text" placeholder="Subcontractor name" autocomplete="off">
+  </div>
+  <div class="meta-field">
+    <span class="meta-label">Interviewer</span>
+    <input class="meta-input" id="interviewer" type="text" placeholder="Your name" autocomplete="off">
+  </div>
+  <div class="meta-field">
+    <span class="meta-label">Date</span>
+    <input class="meta-input" id="interviewDate" type="date">
+  </div>
+  <div class="meta-field full">
+    <span class="meta-label">Project / Site</span>
+    <input class="meta-input" id="project" type="text" placeholder="Project name or location" autocomplete="off">
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<div class="questions">
+  <div class="q-card">
+    <div class="q-num">Q01 OF 14 <span class="q-answered-dot" id="dot-0"></span></div>
+    <div class="q-text">How do employees access the site safety plan (JHA or equivalent) and site safety rules?</div>
+    <textarea class="q-textarea" id="ans-0" placeholder="Response..." rows="4" oninput="onInput(0,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q02 OF 14 <span class="q-answered-dot" id="dot-1"></span></div>
+    <div class="q-text">What are the site safety goals and objectives?</div>
+    <textarea class="q-textarea" id="ans-1" placeholder="Response..." rows="4" oninput="onInput(1,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q03 OF 14 <span class="q-answered-dot" id="dot-2"></span></div>
+    <div class="q-text">What do you do if you observe an unsafe act or condition?</div>
+    <textarea class="q-textarea" id="ans-2" placeholder="Response..." rows="4" oninput="onInput(2,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q04 OF 14 <span class="q-answered-dot" id="dot-3"></span></div>
+    <div class="q-text">When was the last time you participated in training?</div>
+    <textarea class="q-textarea" id="ans-3" placeholder="Response..." rows="4" oninput="onInput(3,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q05 OF 14 <span class="q-answered-dot" id="dot-4"></span></div>
+    <div class="q-text">When was the last time you participated in a walkthrough?</div>
+    <textarea class="q-textarea" id="ans-4" placeholder="Response..." rows="4" oninput="onInput(4,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q06 OF 14 <span class="q-answered-dot" id="dot-5"></span></div>
+    <div class="q-text">Describe the pre-task planning process. When was the last time you participated in a PTP? Do you have any suggestions for improvement?</div>
+    <textarea class="q-textarea" id="ans-5" placeholder="Response..." rows="4" oninput="onInput(5,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q07 OF 14 <span class="q-answered-dot" id="dot-6"></span></div>
+    <div class="q-text">Describe the safety observation process. How many observations have you submitted? When was the last time you submitted an observation? Do you have any suggestions for improvement?</div>
+    <textarea class="q-textarea" id="ans-6" placeholder="Response..." rows="4" oninput="onInput(6,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q08 OF 14 <span class="q-answered-dot" id="dot-7"></span></div>
+    <div class="q-text">How do you report an incident? Have you ever reported an incident?</div>
+    <textarea class="q-textarea" id="ans-7" placeholder="Response..." rows="4" oninput="onInput(7,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q09 OF 14 <span class="q-answered-dot" id="dot-8"></span></div>
+    <div class="q-text">Do you feel like you are held accountable for safety?</div>
+    <textarea class="q-textarea" id="ans-8" placeholder="Response..." rows="4" oninput="onInput(8,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q10 OF 14 <span class="q-answered-dot" id="dot-9"></span></div>
+    <div class="q-text">What are your safety responsibilities?</div>
+    <textarea class="q-textarea" id="ans-9" placeholder="Response..." rows="4" oninput="onInput(9,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q11 OF 14 <span class="q-answered-dot" id="dot-10"></span></div>
+    <div class="q-text">Is there a safety committee on site? If so, do you participate in the committee?</div>
+    <textarea class="q-textarea" id="ans-10" placeholder="Response..." rows="4" oninput="onInput(10,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q12 OF 14 <span class="q-answered-dot" id="dot-11"></span></div>
+    <div class="q-text">Have you ever submitted a safety suggestion?</div>
+    <textarea class="q-textarea" id="ans-11" placeholder="Response..." rows="4" oninput="onInput(11,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q13 OF 14 <span class="q-answered-dot" id="dot-12"></span></div>
+    <div class="q-text">Have you been trained on the emergency response or evacuation plan? Describe the plan. Where is your assembly point?</div>
+    <textarea class="q-textarea" id="ans-12" placeholder="Response..." rows="4" oninput="onInput(12,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q14 OF 14 <span class="q-answered-dot" id="dot-13"></span></div>
+    <div class="q-text">What do you perceive as your highest risk activities? Do you feel that the controls in place are adequate? Do you have any suggestions for improvement?</div>
+    <textarea class="q-textarea" id="ans-13" placeholder="Response..." rows="4" oninput="onInput(13,this.value)"></textarea>
+  </div>
+</div>
+
+<div class="complete-banner" id="completeBanner">✓ All questions answered — ready to submit</div>
+<div class="error-msg" id="errorMsg">Submission failed. Check your connection and try again.</div>
+
+<div class="submit-wrap">
+  <button class="submit-btn" id="submitBtn" onclick="submitForm()">Submit</button>
+  <div class="submit-note">Requires an internet connection to submit.</div>
+</div>
+
+<script>
+const TOTAL = 14;
+const LABELS = [
+  "How do employees access the site safety plan (JHA or equivalent) and site safety rules?",
+  "What are the site safety goals and objectives?",
+  "What do you do if you observe an unsafe act or condition?",
+  "When was the last time you participated in training?",
+  "When was the last time you participated in a walkthrough?",
+  "Describe the pre-task planning process. When was the last PTP? Suggestions for improvement?",
+  "Describe the safety observation process. How many submitted? Last submission? Suggestions?",
+  "How do you report an incident? Have you ever reported an incident?",
+  "Do you feel like you are held accountable for safety?",
+  "What are your safety responsibilities?",
+  "Is there a safety committee on site? Do you participate?",
+  "Have you ever submitted a safety suggestion?",
+  "Have you been trained on the emergency response or evacuation plan? Describe it. Assembly point?",
+  "What are your highest risk activities? Are controls adequate? Suggestions for improvement?"
+];
+
+const today = new Date();
+document.getElementById('dateDisplay').textContent =
+  today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+document.getElementById('interviewDate').value = today.toISOString().split('T')[0];
+
+function onInput(idx, val) {
+  document.getElementById('dot-' + idx).classList.toggle('filled', val.trim().length > 0);
+  updateProgress();
+}
+
+function updateProgress() {
+  let filled = 0;
+  for (let i = 0; i < TOTAL; i++) {
+    if (document.getElementById('ans-' + i).value.trim().length > 0) filled++;
+  }
+  document.getElementById('progressFill').style.width = Math.round((filled / TOTAL) * 100) + '%';
+  document.getElementById('progressLabel').textContent = filled + ' of ' + TOTAL + ' answered';
+  document.getElementById('completeBanner').classList.toggle('show', filled === TOTAL);
+}
+
+async function submitForm() {
+  const btn = document.getElementById('submitBtn');
+  const errMsg = document.getElementById('errorMsg');
+  errMsg.classList.remove('show');
+
+  const trade       = document.getElementById('trade').value.trim() || '(not provided)';
+  const crew        = document.getElementById('crew').value.trim() || '(not provided)';
+  const interviewer = document.getElementById('interviewer').value.trim() || '(not provided)';
+  const dateVal     = document.getElementById('interviewDate').value || '(not provided)';
+  const project     = document.getElementById('project').value.trim() || '(not provided)';
+
+  const data = {
+    _subject: 'Employee Involvement Assessment — ' + trade + ' — ' + dateVal,
+    'Form Type': 'Employee Involvement Assessment',
+    'Trade / Craft': trade,
+    'Crew / Employer': crew,
+    'Interviewer': interviewer,
+    'Date': dateVal,
+    'Project / Site': project,
+    'NOTE': 'Anonymous — no employee names collected'
+  };
+
+  for (let i = 0; i < TOTAL; i++) {
+    data['Q' + String(i + 1).padStart(2, '0') + ' — ' + LABELS[i]] =
+      document.getElementById('ans-' + i).value.trim() || '(no response)';
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    const res = await fetch('https://formspree.io/f/xbdereok', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      document.getElementById('successScreen').classList.add('show');
+    } else {
+      throw new Error('Server error');
+    }
+  } catch (e) {
+    errMsg.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Submit';
+  }
+}
+
+function resetForm() {
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('trade').value = '';
+  document.getElementById('crew').value = '';
+  document.getElementById('interviewer').value = '';
+  document.getElementById('interviewDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('project').value = '';
+  for (let i = 0; i < TOTAL; i++) {
+    document.getElementById('ans-' + i).value = '';
+    document.getElementById('dot-' + i).classList.remove('filled');
+  }
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Submit';
+  document.getElementById('errorMsg').classList.remove('show');
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>

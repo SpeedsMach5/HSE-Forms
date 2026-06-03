@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Field Supervision Engagement Assessment</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f10; --surface: #161a1c; --border: #2a2f32;
+    --border-active: #E8A020; --amber: #E8A020; --amber-dim: #c07a10;
+    --text: #e4e6e8; --text-muted: #7a8085; --text-label: #a0a8af;
+    --input-bg: #1c2124; --radius: 6px;
+  }
+  html { background: var(--bg); }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 0 0 60px 0; }
+  .header { background: var(--surface); border-bottom: 2px solid var(--amber); padding: 20px 20px 16px; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .header-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: var(--bg); background: var(--amber); padding: 3px 7px; border-radius: 3px; letter-spacing: 0.08em; white-space: nowrap; }
+  .header h1 { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.2; }
+  .header-meta { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .progress-bar-wrap { margin-top: 10px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--amber); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+  .progress-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-muted); margin-top: 5px; text-align: right; }
+  .anon-notice { margin: 14px 16px 0; background: rgba(232,160,32,0.07); border: 1px solid rgba(232,160,32,0.25); border-radius: var(--radius); padding: 10px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--amber); line-height: 1.5; }
+  .anon-notice strong { font-weight: 600; }
+  .meta-section { padding: 20px 16px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .meta-field { display: flex; flex-direction: column; gap: 5px; }
+  .meta-field.full { grid-column: 1 / -1; }
+  .meta-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--amber); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+  .meta-input { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; padding: 9px 11px; border-radius: var(--radius); outline: none; transition: border-color 0.15s; width: 100%; }
+  .meta-input:focus { border-color: var(--amber); }
+  .section-divider { margin: 20px 16px 0; border: none; border-top: 1px solid var(--border); }
+  .questions { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+  .q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.15s; }
+  .q-card:focus-within { border-color: var(--border-active); }
+  .q-num { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; color: var(--amber); background: rgba(232,160,32,0.08); padding: 6px 12px 5px; border-bottom: 1px solid var(--border); letter-spacing: 0.1em; display: flex; justify-content: space-between; align-items: center; }
+  .q-answered-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+  .q-answered-dot.filled { background: var(--amber); }
+  .q-text { font-size: 13px; font-weight: 500; color: var(--text-label); padding: 10px 12px 8px; line-height: 1.5; }
+  .q-textarea { background: transparent; border: none; border-top: 1px solid var(--border); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; line-height: 1.6; padding: 10px 12px; width: 100%; resize: vertical; min-height: 90px; outline: none; }
+  .q-textarea::placeholder { color: var(--text-muted); font-size: 13px; }
+  .submit-wrap { padding: 20px 16px 0; }
+  .submit-btn { width: 100%; background: var(--amber); color: #0d0f10; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; border: none; padding: 16px; border-radius: var(--radius); cursor: pointer; transition: background 0.15s, transform 0.1s; text-transform: uppercase; -webkit-tap-highlight-color: transparent; }
+  .submit-btn:active { background: var(--amber-dim); transform: scale(0.98); }
+  .submit-btn:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
+  .submit-note { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 8px; line-height: 1.5; }
+  .complete-banner { display: none; margin: 16px 16px 0; background: rgba(232,160,32,0.1); border: 1px solid var(--amber); border-radius: var(--radius); padding: 12px 14px; font-size: 12px; color: var(--amber); font-family: 'IBM Plex Mono', monospace; text-align: center; line-height: 1.5; }
+  .complete-banner.show { display: block; }
+  .success-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; }
+  .success-screen.show { display: flex; }
+  .success-icon { font-size: 48px; margin-bottom: 20px; }
+  .success-title { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; color: var(--amber); margin-bottom: 10px; }
+  .success-msg { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 280px; }
+  .success-btn { margin-top: 32px; background: var(--amber); color: #0d0f10; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; border: none; padding: 14px 28px; border-radius: var(--radius); cursor: pointer; text-transform: uppercase; }
+  .error-msg { display: none; margin: 12px 16px 0; background: rgba(220,60,60,0.1); border: 1px solid rgba(220,60,60,0.4); border-radius: var(--radius); padding: 10px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #e07070; line-height: 1.5; }
+  .error-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Submitted</div>
+  <div class="success-msg">Responses received. The form has been cleared and is ready for the next interview.</div>
+  <button class="success-btn" onclick="resetForm()">New Interview</button>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <span class="header-badge">HSE</span>
+    <h1>Field Supervision Engagement Assessment</h1>
+  </div>
+  <div class="header-meta" id="dateDisplay"></div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel">0 of 26 answered</div>
+</div>
+
+<div class="anon-notice">
+  <strong>ANONYMOUS</strong> — No names are collected. Responses are attributed to trade and supervisory role only.
+</div>
+
+<div class="meta-section">
+  <div class="meta-field">
+    <span class="meta-label">Trade / Craft</span>
+    <input class="meta-input" id="trade" type="text" placeholder="e.g. Ironworker, Electrical" autocomplete="off">
+  </div>
+  <div class="meta-field">
+    <span class="meta-label">Supervisory Role</span>
+    <input class="meta-input" id="supRole" type="text" placeholder="e.g. Foreman, General Foreman" autocomplete="off">
+  </div>
+  <div class="meta-field">
+    <span class="meta-label">Crew / Employer</span>
+    <input class="meta-input" id="crew" type="text" placeholder="Subcontractor name" autocomplete="off">
+  </div>
+  <div class="meta-field">
+    <span class="meta-label">Interviewer</span>
+    <input class="meta-input" id="interviewer" type="text" placeholder="Your name" autocomplete="off">
+  </div>
+  <div class="meta-field">
+    <span class="meta-label">Date</span>
+    <input class="meta-input" id="interviewDate" type="date">
+  </div>
+  <div class="meta-field full">
+    <span class="meta-label">Project / Site</span>
+    <input class="meta-input" id="project" type="text" placeholder="Project name or location" autocomplete="off">
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<div class="questions">
+  <div class="q-card">
+    <div class="q-num">Q01 OF 26 <span class="q-answered-dot" id="dot-0"></span></div>
+    <div class="q-text">How does the site leadership demonstrate a thorough understanding of the site HSE program?</div>
+    <textarea class="q-textarea" id="ans-0" placeholder="Response..." rows="4" oninput="onInput(0,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q02 OF 26 <span class="q-answered-dot" id="dot-1"></span></div>
+    <div class="q-text">What are the standards of performance or expectations for management and supervision?</div>
+    <textarea class="q-textarea" id="ans-1" placeholder="Response..." rows="4" oninput="onInput(1,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q03 OF 26 <span class="q-answered-dot" id="dot-2"></span></div>
+    <div class="q-text">What is the leadership engagement assessment process? How is it being used?</div>
+    <textarea class="q-textarea" id="ans-2" placeholder="Response..." rows="4" oninput="onInput(2,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q04 OF 26 <span class="q-answered-dot" id="dot-3"></span></div>
+    <div class="q-text">How often does management and supervision conduct walkthroughs? What levels of management participate in the walkthroughs?</div>
+    <textarea class="q-textarea" id="ans-3" placeholder="Response..." rows="4" oninput="onInput(3,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q05 OF 26 <span class="q-answered-dot" id="dot-4"></span></div>
+    <div class="q-text">How often do you participate in walkthroughs? When was the last walkthrough you performed?</div>
+    <textarea class="q-textarea" id="ans-4" placeholder="Response..." rows="4" oninput="onInput(4,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q06 OF 26 <span class="q-answered-dot" id="dot-5"></span></div>
+    <div class="q-text">How is management and supervision engaged in training?</div>
+    <textarea class="q-textarea" id="ans-5" placeholder="Response..." rows="4" oninput="onInput(5,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q07 OF 26 <span class="q-answered-dot" id="dot-6"></span></div>
+    <div class="q-text">What training have you had?</div>
+    <textarea class="q-textarea" id="ans-6" placeholder="Response..." rows="4" oninput="onInput(6,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q08 OF 26 <span class="q-answered-dot" id="dot-7"></span></div>
+    <div class="q-text">Have you delivered training on site?</div>
+    <textarea class="q-textarea" id="ans-7" placeholder="Response..." rows="4" oninput="onInput(7,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q09 OF 26 <span class="q-answered-dot" id="dot-8"></span></div>
+    <div class="q-text">How is management and supervision engaged in the incident investigation process?</div>
+    <textarea class="q-textarea" id="ans-8" placeholder="Response..." rows="4" oninput="onInput(8,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q10 OF 26 <span class="q-answered-dot" id="dot-9"></span></div>
+    <div class="q-text">Have you participated in an incident investigation? Describe the process and how you think it might be improved.</div>
+    <textarea class="q-textarea" id="ans-9" placeholder="Response..." rows="4" oninput="onInput(9,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q11 OF 26 <span class="q-answered-dot" id="dot-10"></span></div>
+    <div class="q-text">How is management and supervision engaged in the pre-task planning (PTP) and observation processes?</div>
+    <textarea class="q-textarea" id="ans-10" placeholder="Response..." rows="4" oninput="onInput(10,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q12 OF 26 <span class="q-answered-dot" id="dot-11"></span></div>
+    <div class="q-text">How many observations have you done?</div>
+    <textarea class="q-textarea" id="ans-11" placeholder="Response..." rows="4" oninput="onInput(11,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q13 OF 26 <span class="q-answered-dot" id="dot-12"></span></div>
+    <div class="q-text">How many PTPs have you reviewed?</div>
+    <textarea class="q-textarea" id="ans-12" placeholder="Response..." rows="4" oninput="onInput(12,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q14 OF 26 <span class="q-answered-dot" id="dot-13"></span></div>
+    <div class="q-text">How often do supervisors conduct safety meetings with their employees? Who leads the meetings?</div>
+    <textarea class="q-textarea" id="ans-13" placeholder="Response..." rows="4" oninput="onInput(13,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q15 OF 26 <span class="q-answered-dot" id="dot-14"></span></div>
+    <div class="q-text">When was the last time you participated in a safety meeting? What was the topic?</div>
+    <textarea class="q-textarea" id="ans-14" placeholder="Response..." rows="4" oninput="onInput(14,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q16 OF 26 <span class="q-answered-dot" id="dot-15"></span></div>
+    <div class="q-text">Describe two ways the site leadership demonstrates their commitment to ensuring a safe work environment for the workers.</div>
+    <textarea class="q-textarea" id="ans-15" placeholder="Response..." rows="4" oninput="onInput(15,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q17 OF 26 <span class="q-answered-dot" id="dot-16"></span></div>
+    <div class="q-text">How did you last demonstrate your commitment to a safe work environment?</div>
+    <textarea class="q-textarea" id="ans-16" placeholder="Response..." rows="4" oninput="onInput(16,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q18 OF 26 <span class="q-answered-dot" id="dot-17"></span></div>
+    <div class="q-text">Discuss the hazards associated with the work. Does the site leadership demonstrate an understanding of the hazards associated with the work being performed on the site?</div>
+    <textarea class="q-textarea" id="ans-17" placeholder="Response..." rows="4" oninput="onInput(17,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q19 OF 26 <span class="q-answered-dot" id="dot-18"></span></div>
+    <div class="q-text">Does the site leadership demonstrate an understanding of the controls in place and their effectiveness at reducing risk?</div>
+    <textarea class="q-textarea" id="ans-18" placeholder="Response..." rows="4" oninput="onInput(18,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q20 OF 26 <span class="q-answered-dot" id="dot-19"></span></div>
+    <div class="q-text">What keeps you up at night?</div>
+    <textarea class="q-textarea" id="ans-19" placeholder="Response..." rows="4" oninput="onInput(19,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q21 OF 26 <span class="q-answered-dot" id="dot-20"></span></div>
+    <div class="q-text">When did the site leadership last review the JHA for completeness?</div>
+    <textarea class="q-textarea" id="ans-20" placeholder="Response..." rows="4" oninput="onInput(20,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q22 OF 26 <span class="q-answered-dot" id="dot-21"></span></div>
+    <div class="q-text">Has the site leadership set goals and objectives and communicated them to the employees? What are the goals and objectives for the project?</div>
+    <textarea class="q-textarea" id="ans-21" placeholder="Response..." rows="4" oninput="onInput(21,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q23 OF 26 <span class="q-answered-dot" id="dot-22"></span></div>
+    <div class="q-text">Discuss roles and responsibilities. Does the site leadership demonstrate an understanding of their roles and responsibilities?</div>
+    <textarea class="q-textarea" id="ans-22" placeholder="Response..." rows="4" oninput="onInput(22,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q24 OF 26 <span class="q-answered-dot" id="dot-23"></span></div>
+    <div class="q-text">How do you recognize employees for working safely? When did you last recognize an employee and for what?</div>
+    <textarea class="q-textarea" id="ans-23" placeholder="Response..." rows="4" oninput="onInput(23,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q25 OF 26 <span class="q-answered-dot" id="dot-24"></span></div>
+    <div class="q-text">What are the current HSE metrics?</div>
+    <textarea class="q-textarea" id="ans-24" placeholder="Response..." rows="4" oninput="onInput(24,this.value)"></textarea>
+  </div>
+  <div class="q-card">
+    <div class="q-num">Q26 OF 26 <span class="q-answered-dot" id="dot-25"></span></div>
+    <div class="q-text">What do you perceive as being your biggest challenge or impediment to improvement?</div>
+    <textarea class="q-textarea" id="ans-25" placeholder="Response..." rows="4" oninput="onInput(25,this.value)"></textarea>
+  </div>
+</div>
+
+<div class="complete-banner" id="completeBanner">✓ All questions answered — ready to submit</div>
+<div class="error-msg" id="errorMsg">Submission failed. Check your connection and try again.</div>
+
+<div class="submit-wrap">
+  <button class="submit-btn" id="submitBtn" onclick="submitForm()">Submit</button>
+  <div class="submit-note">Requires an internet connection to submit.</div>
+</div>
+
+<script>
+const TOTAL = 26;
+const LABELS = [
+  "How does the site leadership demonstrate a thorough understanding of the site HSE program?",
+  "What are the standards of performance or expectations for management and supervision?",
+  "What is the leadership engagement assessment process? How is it being used?",
+  "How often does management and supervision conduct walkthroughs? What levels of management participate?",
+  "How often do you participate in walkthroughs? When was the last walkthrough you performed?",
+  "How is management and supervision engaged in training?",
+  "What training have you had?",
+  "Have you delivered training on site?",
+  "How is management and supervision engaged in the incident investigation process?",
+  "Have you participated in an incident investigation? Describe the process and how you think it might be improved.",
+  "How is management and supervision engaged in the pre-task planning (PTP) and observation processes?",
+  "How many observations have you done?",
+  "How many PTPs have you reviewed?",
+  "How often do supervisors conduct safety meetings with their employees? Who leads the meetings?",
+  "When was the last time you participated in a safety meeting? What was the topic?",
+  "Describe two ways the site leadership demonstrates their commitment to ensuring a safe work environment.",
+  "How did you last demonstrate your commitment to a safe work environment?",
+  "Discuss the hazards associated with the work. Does site leadership demonstrate an understanding of the hazards?",
+  "Does site leadership demonstrate an understanding of the controls in place and their effectiveness at reducing risk?",
+  "What keeps you up at night?",
+  "When did site leadership last review the JHA for completeness?",
+  "Has site leadership set goals and objectives and communicated them? What are the goals and objectives?",
+  "Discuss roles and responsibilities. Does site leadership demonstrate an understanding of their roles and responsibilities?",
+  "How do you recognize employees for working safely? When did you last recognize an employee and for what?",
+  "What are the current HSE metrics?",
+  "What do you perceive as being your biggest challenge or impediment to improvement?"
+];
+
+const today = new Date();
+document.getElementById('dateDisplay').textContent =
+  today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+document.getElementById('interviewDate').value = today.toISOString().split('T')[0];
+
+function onInput(idx, val) {
+  document.getElementById('dot-' + idx).classList.toggle('filled', val.trim().length > 0);
+  updateProgress();
+}
+
+function updateProgress() {
+  let filled = 0;
+  for (let i = 0; i < TOTAL; i++) {
+    if (document.getElementById('ans-' + i).value.trim().length > 0) filled++;
+  }
+  document.getElementById('progressFill').style.width = Math.round((filled / TOTAL) * 100) + '%';
+  document.getElementById('progressLabel').textContent = filled + ' of ' + TOTAL + ' answered';
+  document.getElementById('completeBanner').classList.toggle('show', filled === TOTAL);
+}
+
+async function submitForm() {
+  const btn = document.getElementById('submitBtn');
+  const errMsg = document.getElementById('errorMsg');
+  errMsg.classList.remove('show');
+
+  const trade       = document.getElementById('trade').value.trim() || '(not provided)';
+  const supRole     = document.getElementById('supRole').value.trim() || '(not provided)';
+  const crew        = document.getElementById('crew').value.trim() || '(not provided)';
+  const interviewer = document.getElementById('interviewer').value.trim() || '(not provided)';
+  const dateVal     = document.getElementById('interviewDate').value || '(not provided)';
+  const project     = document.getElementById('project').value.trim() || '(not provided)';
+
+  const data = {
+    _subject: 'Field Supervision Engagement — ' + supRole + ' / ' + trade + ' — ' + dateVal,
+    'Form Type': 'Field Supervision Engagement Assessment',
+    'Trade / Craft': trade,
+    'Supervisory Role': supRole,
+    'Crew / Employer': crew,
+    'Interviewer': interviewer,
+    'Date': dateVal,
+    'Project / Site': project,
+    'NOTE': 'Anonymous — no supervisor names collected'
+  };
+
+  for (let i = 0; i < TOTAL; i++) {
+    data['Q' + String(i + 1).padStart(2, '0') + ' — ' + LABELS[i]] =
+      document.getElementById('ans-' + i).value.trim() || '(no response)';
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    const res = await fetch('https://formspree.io/f/xbdereok', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      document.getElementById('successScreen').classList.add('show');
+    } else {
+      throw new Error('Server error');
+    }
+  } catch (e) {
+    errMsg.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Submit';
+  }
+}
+
+function resetForm() {
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('trade').value = '';
+  document.getElementById('supRole').value = '';
+  document.getElementById('crew').value = '';
+  document.getElementById('interviewer').value = '';
+  document.getElementById('interviewDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('project').value = '';
+  for (let i = 0; i < TOTAL; i++) {
+    document.getElementById('ans-' + i).value = '';
+    document.getElementById('dot-' + i).classList.remove('filled');
+  }
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Submit';
+  document.getElementById('errorMsg').classList.remove('show');
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
